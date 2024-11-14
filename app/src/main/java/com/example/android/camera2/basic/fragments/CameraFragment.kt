@@ -415,25 +415,12 @@ class CameraFragment : Fragment() {
     /** Helper function used to save a [CombinedCaptureResult] into a [File] */
     private suspend fun saveResult(result: CombinedCaptureResult): File = suspendCoroutine { cont ->
         when (result.format) {
-
-            // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
-            ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
-                val buffer = result.image.planes[0].buffer
-                val bytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
-                try {
-                    val output = createFile(requireContext(), "jpg")
-                    FileOutputStream(output).use { it.write(bytes) }
-                    cont.resume(output)
-                } catch (exc: IOException) {
-                    Log.e(TAG, "Unable to write JPEG image to file", exc)
-                    cont.resumeWithException(exc)
-                }
-            }
-
             // When the format is RAW we use the DngCreator utility library
             ImageFormat.RAW_SENSOR -> {
                 val dngCreator = DngCreator(characteristics, result.metadata)
                 try {
+                    dngCreator.setOrientation(result.orientation)
+                    
                     val filename = "RAW_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                         .format(Date())}.dng"
 
@@ -443,7 +430,7 @@ class CameraFragment : Fragment() {
                             put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
                             put(MediaStore.MediaColumns.MIME_TYPE, "image/x-adobe-dng")
                             put(MediaStore.MediaColumns.RELATIVE_PATH,
-                                "${Environment.DIRECTORY_PICTURES}/CameraApp")
+                                "${Environment.DIRECTORY_DCIM}/Camera")
                         }
 
                         val resolver = requireContext().contentResolver
@@ -459,18 +446,18 @@ class CameraFragment : Fragment() {
                             dngCreator.writeImage(stream, result.image)
                         }
 
-                        // Create a reference file in the Pictures directory
-                        val pictures = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_PICTURES)
-                        val appFolder = File(pictures, "CameraApp")
+                        // Create a reference file in the DCIM directory
+                        val dcim = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DCIM)
+                        val appFolder = File(dcim, "Camera")
                         val savedFile = File(appFolder, filename)
                         cont.resume(savedFile)
 
                     } else {
                         // Below Android 10: Use direct file access
-                        val pictures = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_PICTURES)
-                        val appFolder = File(pictures, "CameraApp").apply {
+                        val dcim = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DCIM)
+                        val appFolder = File(dcim, "Camera").apply {
                             if (!exists()) {
                                 mkdirs()
                             }
@@ -490,7 +477,7 @@ class CameraFragment : Fragment() {
                 }
             }
 
-            // No other formats are supported by this sample
+            // No other formats are supported
             else -> {
                 val exc = RuntimeException("Unknown image format: ${result.image.format}")
                 Log.e(TAG, exc.message, exc)
