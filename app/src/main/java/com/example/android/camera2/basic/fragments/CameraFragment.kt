@@ -243,15 +243,6 @@ class CameraFragment : Fragment() {
                     val output = saveResult(result)
                     Log.d(TAG, "Image saved: ${output.absolutePath}")
 
-                    // If the result is a JPEG file, update EXIF metadata with orientation info
-                    if (output.extension == "jpg") {
-                        val exif = ExifInterface(output.absolutePath)
-                        exif.setAttribute(
-                                ExifInterface.TAG_ORIENTATION, result.orientation.toString())
-                        exif.saveAttributes()
-                        Log.d(TAG, "EXIF metadata saved: ${output.absolutePath}")
-                    }
-
                     // Display the photo taken to user
                     lifecycleScope.launch(Dispatchers.Main) {
                         navController.navigate(CameraFragmentDirections
