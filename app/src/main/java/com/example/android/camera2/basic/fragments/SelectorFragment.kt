@@ -107,24 +107,12 @@ class SelectorFragment : Fragment() {
                 val outputFormats = characteristics.get(
                         CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.outputFormats
 
-                // All cameras *must* support JPEG output so we don't need to check characteristics
-                availableCameras.add(FormatItem(
-                        "$orientation JPEG ($id)", id, ImageFormat.JPEG))
-
-                // Return cameras that support RAW capability
-                if (capabilities.contains(
+                // Return back camera that support RAW capability
+                if (orientation == "Back" && capabilities.contains(
                                 CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) &&
                         outputFormats.contains(ImageFormat.RAW_SENSOR)) {
                     availableCameras.add(FormatItem(
-                            "$orientation RAW ($id)", id, ImageFormat.RAW_SENSOR))
-                }
-
-                // Return cameras that support JPEG DEPTH capability
-                if (capabilities.contains(
-                            CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT) &&
-                        outputFormats.contains(ImageFormat.DEPTH_JPEG)) {
-                    availableCameras.add(FormatItem(
-                            "$orientation DEPTH ($id)", id, ImageFormat.DEPTH_JPEG))
+                            "Open Camera", id, ImageFormat.RAW_SENSOR))
                 }
             }
 
