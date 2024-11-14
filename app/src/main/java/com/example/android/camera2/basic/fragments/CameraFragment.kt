@@ -70,6 +70,13 @@ import kotlin.RuntimeException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import android.Manifest
+import android.content.ContentValues
+import android.content.pm.PackageManager
+import android.os.Environment
+import android.provider.MediaStore
+import androidx.core.content.ContextCompat
+import java.io.OutputStream
 
 class CameraFragment : Fragment() {
 
@@ -427,11 +434,58 @@ class CameraFragment : Fragment() {
             ImageFormat.RAW_SENSOR -> {
                 val dngCreator = DngCreator(characteristics, result.metadata)
                 try {
-                    val output = createFile(requireContext(), "dng")
-                    FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
-                    cont.resume(output)
+                    val filename = "RAW_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                        .format(Date())}.dng"
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        // Android 10 and above: Use MediaStore
+                        val contentValues = ContentValues().apply {
+                            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                            put(MediaStore.MediaColumns.MIME_TYPE, "image/x-adobe-dng")
+                            put(MediaStore.MediaColumns.RELATIVE_PATH,
+                                "${Environment.DIRECTORY_PICTURES}/CameraApp")
+                        }
+
+                        val resolver = requireContext().contentResolver
+                        val uri = resolver.insert(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            contentValues
+                        ) ?: throw IOException("Failed to create MediaStore entry")
+
+                        val outputStream = resolver.openOutputStream(uri)
+                            ?: throw IOException("Failed to open output stream")
+
+                        outputStream.use { stream ->
+                            dngCreator.writeImage(stream, result.image)
+                        }
+
+                        // Create a reference file in the Pictures directory
+                        val pictures = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_PICTURES)
+                        val appFolder = File(pictures, "CameraApp")
+                        val savedFile = File(appFolder, filename)
+                        cont.resume(savedFile)
+
+                    } else {
+                        // Below Android 10: Use direct file access
+                        val pictures = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_PICTURES)
+                        val appFolder = File(pictures, "CameraApp").apply {
+                            if (!exists()) {
+                                mkdirs()
+                            }
+                        }
+                        val file = File(appFolder, filename)
+
+                        FileOutputStream(file).use { outputStream ->
+                            dngCreator.writeImage(outputStream, result.image)
+                        }
+
+                        cont.resume(file)
+                    }
+
                 } catch (exc: IOException) {
-                    Log.e(TAG, "Unable to write DNG image to file", exc)
+                    Log.e(TAG, "Unable to write DNG image to external storage", exc)
                     cont.resumeWithException(exc)
                 }
             }
