@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.camera.utils
+package com.reilandeubank.unprocess.utils
 
 import android.view.LayoutInflater
 import android.view.View

@@ -31,7 +31,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.android.camera.utils.GenericListAdapter
+import com.reilandeubank.unprocess.utils.GenericListAdapter
 import com.reilandeubank.unprocess.R
 
 class SelectorFragment : Fragment() {

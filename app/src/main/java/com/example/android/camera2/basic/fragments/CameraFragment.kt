@@ -48,9 +48,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.navArgs
-import com.example.android.camera.utils.computeExifOrientation
-import com.example.android.camera.utils.getPreviewOutputSize
-import com.example.android.camera.utils.OrientationLiveData
+import com.reilandeubank.unprocess.utils.computeExifOrientation
+import com.reilandeubank.unprocess.utils.getPreviewOutputSize
+import com.reilandeubank.unprocess.utils.OrientationLiveData
 import com.reilandeubank.unprocess.CameraActivity
 import com.reilandeubank.unprocess.R
 import com.reilandeubank.unprocess.databinding.FragmentCameraBinding

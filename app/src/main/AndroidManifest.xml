@@ -35,8 +35,7 @@
         android:fullBackupContent="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
-        tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:allowBackup,android:label">
+        tools:ignore="GoogleAppIndexingWarning">
 
         <activity
             android:name="com.reilandeubank.unprocess.CameraActivity"
