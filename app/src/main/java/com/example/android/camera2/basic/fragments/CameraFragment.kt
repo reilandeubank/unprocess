@@ -426,81 +426,80 @@ class CameraFragment : Fragment() {
     /** Helper function used to save a [CombinedCaptureResult] into a [File] */
     private suspend fun saveResult(result: CombinedCaptureResult): File = suspendCoroutine { cont ->
         when (result.format) {
-            // When the format is RAW we use the DngCreator utility library
+            // Only expecting RAW sensor data
             ImageFormat.RAW_SENSOR -> {
                 val dngCreator = DngCreator(characteristics, result.metadata)
                 try {
                     if (args.convertToJpeg) {
-                        dngCreator.setOrientation(result.orientation)
+                        // Get RAW image data
+                        val rawImage = result.image
+                        val rawBuffer = rawImage.planes[0].buffer
+                        val rawBytes = ByteArray(rawBuffer.remaining())
+                        rawBuffer.get(rawBytes)
 
-                    // Get RAW image data
-                    val rawImage = result.image
-                    val rawBuffer = rawImage.planes[0].buffer
-                    val rawBytes = ByteArray(rawBuffer.remaining())
-                    rawBuffer.get(rawBytes)
+                        // Create a temporary DNG file
+                        val tempDngFile = File(requireContext().cacheDir, "temp.dng")
+                        FileOutputStream(tempDngFile).use { outputStream ->
+                            dngCreator.writeImage(outputStream, rawImage)
+                        }
 
-                    // Create a temporary DNG file
-                    val tempDngFile = File(requireContext().cacheDir, "temp.dng")
-                    FileOutputStream(tempDngFile).use { outputStream ->
-                        dngCreator.writeImage(outputStream, rawImage)
-                    }
+                        // TODO: Right now, using android's basic bitmap conversion,
+                        //  may want to use RenderScript or other RAW processing library
+                        val bitmap = BitmapFactory.decodeFile(tempDngFile.absolutePath)
+                        tempDngFile.delete() // Clean up temp file
 
-                    // Use RenderScript or other RAW processing library here
-                    // For now, we'll use Android's basic RAW to Bitmap conversion
-                    val bitmap = BitmapFactory.decodeFile(tempDngFile.absolutePath)
-                    tempDngFile.delete() // Clean up temp file
+                        // Save as JPEG
+                        val filename = "IMG_${
+                            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                                .format(Date())
+                        }.jpg"
 
-                    // Save as JPEG
-                    val filename = "IMG_${
-                        SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                            .format(Date())
-                    }.jpg"
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            val contentValues = ContentValues().apply {
+                                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                                put(
+                                    MediaStore.MediaColumns.RELATIVE_PATH,
+                                    "${Environment.DIRECTORY_DCIM}/Camera"
+                                )
+                            }
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        val contentValues = ContentValues().apply {
-                            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-                            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                            put(
-                                MediaStore.MediaColumns.RELATIVE_PATH,
-                                "${Environment.DIRECTORY_DCIM}/Camera"
+                            val resolver = requireContext().contentResolver
+                            val uri = resolver.insert(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                contentValues
+                            ) ?: throw IOException("Failed to create MediaStore entry")
+
+                            resolver.openOutputStream(uri)?.use { stream ->
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                            }
+
+                            // Create a reference file in the DCIM directory
+                            val dcim = Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_DCIM
                             )
+                            val appFolder = File(dcim, "Camera")
+                            val savedFile = File(appFolder, filename)
+                            cont.resume(savedFile)
+                        } else {
+                            val dcim = Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_DCIM
+                            )
+                            val appFolder = File(dcim, "Camera").apply {
+                                if (!exists()) mkdirs()
+                            }
+                            val file = File(appFolder, filename)
+
+                            FileOutputStream(file).use { stream ->
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                            }
+
+                            cont.resume(file)
                         }
 
-                        val resolver = requireContext().contentResolver
-                        val uri = resolver.insert(
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                            contentValues
-                        ) ?: throw IOException("Failed to create MediaStore entry")
-
-                        resolver.openOutputStream(uri)?.use { stream ->
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                        }
-
-                        // Create a reference file in the DCIM directory
-                        val dcim = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DCIM
-                        )
-                        val appFolder = File(dcim, "Camera")
-                        val savedFile = File(appFolder, filename)
-                        cont.resume(savedFile)
+                        bitmap.recycle()
                     } else {
-                        val dcim = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DCIM
-                        )
-                        val appFolder = File(dcim, "Camera").apply {
-                            if (!exists()) mkdirs()
-                        }
-                        val file = File(appFolder, filename)
-
-                        FileOutputStream(file).use { stream ->
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                        }
-
-                        cont.resume(file)
-                    }
-
-                    bitmap.recycle()
-                    } else {
+                        dngCreator.setOrientation(result.orientation)
                         val filename = "RAW_${
                             SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                                 .format(Date())
