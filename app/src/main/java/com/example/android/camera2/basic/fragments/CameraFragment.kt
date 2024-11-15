@@ -430,8 +430,9 @@ class CameraFragment : Fragment() {
             ImageFormat.RAW_SENSOR -> {
                 val dngCreator = DngCreator(characteristics, result.metadata)
                 try {
-                    dngCreator.setOrientation(result.orientation)
-                    
+                    if (args.convertToJpeg) {
+                        dngCreator.setOrientation(result.orientation)
+
                     // Get RAW image data
                     val rawImage = result.image
                     val rawBuffer = rawImage.planes[0].buffer
@@ -450,15 +451,19 @@ class CameraFragment : Fragment() {
                     tempDngFile.delete() // Clean up temp file
 
                     // Save as JPEG
-                    val filename = "IMG_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-                        .format(Date())}.jpg"
+                    val filename = "IMG_${
+                        SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                            .format(Date())
+                    }.jpg"
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         val contentValues = ContentValues().apply {
                             put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
                             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                            put(MediaStore.MediaColumns.RELATIVE_PATH,
-                                "${Environment.DIRECTORY_DCIM}/Camera")
+                            put(
+                                MediaStore.MediaColumns.RELATIVE_PATH,
+                                "${Environment.DIRECTORY_DCIM}/Camera"
+                            )
                         }
 
                         val resolver = requireContext().contentResolver
@@ -473,13 +478,15 @@ class CameraFragment : Fragment() {
 
                         // Create a reference file in the DCIM directory
                         val dcim = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DCIM)
+                            Environment.DIRECTORY_DCIM
+                        )
                         val appFolder = File(dcim, "Camera")
                         val savedFile = File(appFolder, filename)
                         cont.resume(savedFile)
                     } else {
                         val dcim = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DCIM)
+                            Environment.DIRECTORY_DCIM
+                        )
                         val appFolder = File(dcim, "Camera").apply {
                             if (!exists()) mkdirs()
                         }
@@ -491,8 +498,63 @@ class CameraFragment : Fragment() {
 
                         cont.resume(file)
                     }
-                    
+
                     bitmap.recycle()
+                    } else {
+                        val filename = "RAW_${
+                            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                                .format(Date())
+                        }.dng"
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            // Android 10 and above: Use MediaStore
+                            val contentValues = ContentValues().apply {
+                                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                                put(MediaStore.MediaColumns.MIME_TYPE, "image/x-adobe-dng")
+                                put(
+                                    MediaStore.MediaColumns.RELATIVE_PATH,
+                                    "${Environment.DIRECTORY_DCIM}/Camera"
+                                )
+                            }
+
+                            val resolver = requireContext().contentResolver
+                            val uri = resolver.insert(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                contentValues
+                            ) ?: throw IOException("Failed to create MediaStore entry")
+
+                            val outputStream = resolver.openOutputStream(uri)
+                                ?: throw IOException("Failed to open output stream")
+
+                            outputStream.use { stream ->
+                                dngCreator.writeImage(stream, result.image)
+                            }
+
+                            // Create a reference file in the DCIM directory
+                            val dcim = Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_DCIM
+                            )
+                            val appFolder = File(dcim, "Camera")
+                            val savedFile = File(appFolder, filename)
+                            cont.resume(savedFile)
+
+                        } else {
+                            // Below Android 10: Use direct file access
+                            val dcim = Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_DCIM
+                            )
+                            val appFolder = File(dcim, "Camera").apply {
+                                if (!exists()) {
+                                    mkdirs()
+                                }
+                            }
+                            val file = File(appFolder, filename)
+
+                            FileOutputStream(file).use { outputStream ->
+                                dngCreator.writeImage(outputStream, result.image)
+                            }
+                        }
+                    }
 
                 } catch (exc: IOException) {
                     Log.e(TAG, "Unable to write JPEG image to external storage", exc)

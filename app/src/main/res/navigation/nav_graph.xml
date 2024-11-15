@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2020 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +13,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<navigation
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
     app:startDestination="@id/permissions_fragment">
@@ -23,7 +21,7 @@
     <fragment
         android:id="@+id/permissions_fragment"
         android:name="com.example.android.camera2.basic.fragments.PermissionsFragment"
-        android:label="Permissions" >
+        android:label="Permissions">
 
         <action
             android:id="@+id/action_permissions_to_selector"
@@ -36,62 +34,77 @@
     <fragment
         android:id="@+id/selector_fragment"
         android:name="com.example.android.camera2.basic.fragments.SelectorFragment"
-        android:label="Selector" >
+        android:label="Selector">
 
         <action
             android:id="@+id/action_selector_to_camera"
-            app:launchSingleTop="true"
-            app:destination="@id/camera_fragment" />
+            app:destination="@id/camera_fragment">
+            <argument
+                android:name="camera_id"
+                app:argType="string" />
+            <argument
+                android:name="pixel_format"
+                app:argType="integer" />
+            <argument
+                android:name="convert_to_jpeg"
+                app:argType="boolean" />
+        </action>
 
     </fragment>
 
     <fragment
         android:id="@+id/camera_fragment"
         android:name="com.example.android.camera2.basic.fragments.CameraFragment"
-        android:label="Camera" >
+        android:label="Camera">
 
         <argument
             android:name="camera_id"
             app:argType="string"
-            app:nullable="false"/>
+            app:nullable="false" />
 
         <argument
             android:name="pixel_format"
             app:argType="integer"
-            app:nullable="false"/>
+            app:nullable="false" />
+
+        <argument
+            android:name="convert_to_jpeg"
+            app:argType="boolean"
+            app:nullable="false" />
+
 
         <action
             android:id="@+id/action_camera_to_permissions"
             app:destination="@id/permissions_fragment"
             app:popUpTo="@id/camera_fragment"
-            app:popUpToInclusive="true"/>
+            app:popUpToInclusive="true" />
 
         <action
             android:id="@+id/action_camera_to_jpeg_viewer"
-            app:launchSingleTop="true"
-            app:destination="@id/image_viewer_fragment" />
+            app:destination="@id/image_viewer_fragment"
+            app:launchSingleTop="true" />
 
     </fragment>
 
     <fragment
         android:id="@+id/image_viewer_fragment"
         android:name="com.example.android.camera2.basic.fragments.ImageViewerFragment"
-        android:label="Image Viewer" >
+        android:label="Image Viewer">
 
         <argument
             android:name="file_path"
             app:argType="string"
-            app:nullable="false"/>
+            app:nullable="false" />
 
         <argument
             android:name="orientation"
-            app:argType="integer"
-            android:defaultValue="0" />
+            android:defaultValue="0"
+            app:argType="integer" />
 
         <argument
             android:name="depth"
-            app:argType="boolean"
-            android:defaultValue="false" />
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
 
 </navigation>
