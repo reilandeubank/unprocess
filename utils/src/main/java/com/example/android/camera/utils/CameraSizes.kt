@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.camera.utils
+package com.reilandeubank.unprocess.utils
 
 import android.graphics.Point
 import android.hardware.camera2.CameraCharacteristics

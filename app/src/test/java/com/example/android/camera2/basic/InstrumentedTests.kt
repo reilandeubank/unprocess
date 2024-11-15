@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.camera2.basic
+package com.reilandeubank.unprocess
 
 import android.Manifest
 import android.content.Context
@@ -43,6 +43,6 @@ class MainInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test
         val context = ApplicationProvider.getApplicationContext() as Context
-        assertEquals("com.android.example.camera2.basic", context.packageName)
+        assertEquals("com.reilandeubank.unprocess", context.packageName)
     }
 }

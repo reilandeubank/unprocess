@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.camera2.basic.fragments
+package com.reilandeubank.unprocess.fragments
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -31,8 +31,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
-import com.example.android.camera.utils.GenericListAdapter
-import com.example.android.camera.utils.decodeExifOrientation
+import com.reilandeubank.unprocess.utils.GenericListAdapter
+import com.reilandeubank.unprocess.utils.decodeExifOrientation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.BufferedInputStream

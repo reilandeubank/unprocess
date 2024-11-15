@@ -18,7 +18,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace = "com.example.android.camera2.basic"
+    namespace = "com.reilandeubank.unprocess.utils"
     compileSdkVersion 29
 
     defaultConfig {

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.example.android.camera2.basic
+package com.reilandeubank.unprocess
 
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.example.android.camera2.basic.databinding.ActivityCameraBinding
+import com.reilandeubank.unprocess.databinding.ActivityCameraBinding
 
 class CameraActivity : AppCompatActivity() {
 
