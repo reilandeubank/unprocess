@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.camera2.basic.fragments
+package com.reilandeubank.unprocess.fragments
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory

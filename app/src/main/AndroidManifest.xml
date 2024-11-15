@@ -16,7 +16,7 @@
   -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.android.camera2.basic">
+    package="com.reilandeubank.unprocess">
 
     <!-- Permission declarations -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -35,10 +35,11 @@
         android:fullBackupContent="true"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
-        tools:ignore="GoogleAppIndexingWarning">
+        tools:ignore="GoogleAppIndexingWarning"
+        tools:replace="android:allowBackup,android:label">
 
         <activity
-            android:name="com.example.android.camera2.basic.CameraActivity"
+            android:name="com.reilandeubank.unprocess.CameraActivity"
             android:clearTaskOnLaunch="true"
             android:exported="true"
             android:theme="@style/AppTheme">

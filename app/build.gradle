@@ -20,11 +20,11 @@ apply plugin: 'kotlin-kapt'
 apply plugin: "androidx.navigation.safeargs"
 
 android {
-    namespace = "com.example.android.camera2.basic"
+    namespace = "com.reilandeubank.unprocess"
     compileSdkVersion 34
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        applicationId "com.android.example.camera2.basic"
+        applicationId "com.reilandeubank.unprocess"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1

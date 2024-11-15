@@ -20,7 +20,7 @@
 
     <fragment
         android:id="@+id/permissions_fragment"
-        android:name="com.example.android.camera2.basic.fragments.PermissionsFragment"
+        android:name="com.reilandeubank.unprocess.fragments.PermissionsFragment"
         android:label="Permissions">
 
         <action
@@ -33,7 +33,7 @@
 
     <fragment
         android:id="@+id/selector_fragment"
-        android:name="com.example.android.camera2.basic.fragments.SelectorFragment"
+        android:name="com.reilandeubank.unprocess.fragments.SelectorFragment"
         android:label="Selector">
 
         <action
@@ -54,7 +54,7 @@
 
     <fragment
         android:id="@+id/camera_fragment"
-        android:name="com.example.android.camera2.basic.fragments.CameraFragment"
+        android:name="com.reilandeubank.unprocess.fragments.CameraFragment"
         android:label="Camera">
 
         <argument
@@ -88,7 +88,7 @@
 
     <fragment
         android:id="@+id/image_viewer_fragment"
-        android:name="com.example.android.camera2.basic.fragments.ImageViewerFragment"
+        android:name="com.reilandeubank.unprocess.fragments.ImageViewerFragment"
         android:label="Image Viewer">
 
         <argument

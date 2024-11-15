@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.camera2.basic.fragments
+package com.reilandeubank.unprocess.fragments
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -51,9 +51,9 @@ import androidx.navigation.fragment.navArgs
 import com.example.android.camera.utils.computeExifOrientation
 import com.example.android.camera.utils.getPreviewOutputSize
 import com.example.android.camera.utils.OrientationLiveData
-import com.example.android.camera2.basic.CameraActivity
-import com.example.android.camera2.basic.R
-import com.example.android.camera2.basic.databinding.FragmentCameraBinding
+import com.reilandeubank.unprocess.CameraActivity
+import com.reilandeubank.unprocess.R
+import com.reilandeubank.unprocess.databinding.FragmentCameraBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
