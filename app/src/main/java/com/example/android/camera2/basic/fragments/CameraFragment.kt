@@ -474,6 +474,14 @@ class CameraFragment : Fragment() {
                                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
                             }
 
+                            // Add EXIF orientation data using the URI
+                            resolver.openFileDescriptor(uri, "rw")?.use { pfd ->
+                                ExifInterface(pfd.fileDescriptor).apply {
+                                    setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
+                                    saveAttributes()
+                                }
+                            }
+
                             // Create a reference file in the DCIM directory
                             val dcim = Environment.getExternalStoragePublicDirectory(
                                 Environment.DIRECTORY_DCIM
@@ -492,6 +500,12 @@ class CameraFragment : Fragment() {
 
                             FileOutputStream(file).use { stream ->
                                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                            }
+
+                            // Add EXIF orientation data
+                            ExifInterface(file.absolutePath).apply {
+                                setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
+                                saveAttributes()
                             }
 
                             cont.resume(file)
