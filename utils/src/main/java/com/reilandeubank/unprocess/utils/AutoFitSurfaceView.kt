@@ -18,7 +18,6 @@ package com.reilandeubank.unprocess.utils
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.SurfaceView
 import kotlin.math.roundToInt
 
