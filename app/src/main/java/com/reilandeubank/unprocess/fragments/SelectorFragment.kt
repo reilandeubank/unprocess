@@ -40,7 +40,7 @@ class SelectorFragment : Fragment() {
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
-    ): View? = RecyclerView(requireContext())
+    ): View = RecyclerView(requireContext())
 
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

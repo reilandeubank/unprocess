@@ -17,8 +17,12 @@
 package com.reilandeubank.unprocess
 
 import android.os.Bundle
-import android.view.View
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.reilandeubank.unprocess.databinding.ActivityCameraBinding
 
 class CameraActivity : AppCompatActivity() {
@@ -27,30 +31,36 @@ class CameraActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         activityCameraBinding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(activityCameraBinding.root)
-    }
 
-    override fun onResume() {
-        super.onResume()
-        // Before setting full screen flags, we must wait a bit to let UI settle; otherwise, we may
-        // be trying to set app to immersive mode before it's ready and the flags do not stick
-        activityCameraBinding.fragmentContainer.postDelayed({
-            activityCameraBinding.fragmentContainer.systemUiVisibility = FLAGS_FULLSCREEN
-        }, IMMERSIVE_FLAG_TIMEOUT)
+        // set fragmentContainer padding by display cutout and navigation bar inset
+        ViewCompat.setOnApplyWindowInsetsListener(activityCameraBinding.fragmentContainer) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val cutout = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(insets.left, cutout.top, insets.right, insets.bottom)
+            windowInsets
+        }
+
+        val windowInsetsController =
+            WindowCompat.getInsetsController(window, window.decorView)
+        // Configure the behavior of the hidden system bars.
+        windowInsetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        // Add a listener to update the behavior of the toggle fullscreen button when
+        // the system bars are hidden or revealed.
+        ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, windowInsets ->
+            // Hide the status bar.
+            windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+            ViewCompat.onApplyWindowInsets(view, windowInsets)
+        }
+
     }
 
     companion object {
-        /** Combination of all flags required to put activity into immersive mode */
-        const val FLAGS_FULLSCREEN =
-                View.SYSTEM_UI_FLAG_LOW_PROFILE or
-                        View.SYSTEM_UI_FLAG_FULLSCREEN or
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-
         /** Milliseconds used for UI animations */
         const val ANIMATION_FAST_MILLIS = 50L
-        const val ANIMATION_SLOW_MILLIS = 100L
-        private const val IMMERSIVE_FLAG_TIMEOUT = 500L
     }
 }
