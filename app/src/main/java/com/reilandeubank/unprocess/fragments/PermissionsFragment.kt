@@ -21,13 +21,16 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.Navigation
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.reilandeubank.unprocess.R
+import kotlinx.coroutines.launch
 
-private const val PERMISSIONS_REQUEST_CODE = 10
 private val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA)
 
 /**
@@ -38,33 +41,46 @@ class PermissionsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Register the permissions callback, which handles the user's response to the
+        // system permissions dialog. Save the return value, an instance of
+        // ActivityResultLauncher. You can use either a val, as shown in this snippet,
+        // or a lateinit var in your onAttach() or onCreate() method.
+        val requestPermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (isGranted) {
+                    // Permission is granted. Continue the action or workflow in your
+                    // app.
+                    navigateToCamera()
+                } else {
+                    // Explain to the user that the feature is unavailable because the
+                    // feature requires a permission that the user has denied. At the
+                    // same time, respect the user's decision. Don't link to system
+                    // settings in an effort to convince the user to change their
+                    // decision.
+                    Toast.makeText(context, R.string.permission_denied, Toast.LENGTH_LONG).show()
+
+                }
+            }
+
         if (hasPermissions(requireContext())) {
             // If permissions have already been granted, proceed
-            nativateToCamera();
+            navigateToCamera()
         } else {
             // Request camera-related permissions
-            requestPermissions(PERMISSIONS_REQUIRED, PERMISSIONS_REQUEST_CODE)
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    override fun onRequestPermissionsResult(
-            requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSIONS_REQUEST_CODE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Takes the user to the success fragment when permission is granted
-                nativateToCamera();
-            } else {
-                Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
+
+    private fun navigateToCamera() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
+                    PermissionsFragmentDirections.actionPermissionsToSelector()
+                )
             }
-        }
-    }
-
-    private fun nativateToCamera()
-    {
-        lifecycleScope.launchWhenStarted {
-            Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
-                    PermissionsFragmentDirections.actionPermissionsToSelector())
         }
     }
 

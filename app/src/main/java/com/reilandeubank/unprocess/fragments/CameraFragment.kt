@@ -17,7 +17,10 @@
 package com.reilandeubank.unprocess.fragments
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCaptureSession
@@ -28,12 +31,16 @@ import android.hardware.camera2.CaptureRequest
 import android.hardware.camera2.CaptureResult
 import android.hardware.camera2.DngCreator
 import android.hardware.camera2.TotalCaptureResult
+import android.hardware.camera2.params.OutputConfiguration
+import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
 import android.media.ImageReader
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Surface
@@ -43,17 +50,16 @@ import android.view.ViewGroup
 import androidx.core.graphics.drawable.toDrawable
 import androidx.exifinterface.media.ExifInterface
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.navArgs
-import com.reilandeubank.unprocess.utils.computeExifOrientation
-import com.reilandeubank.unprocess.utils.getPreviewOutputSize
-import com.reilandeubank.unprocess.utils.OrientationLiveData
+import com.google.android.gms.common.util.concurrent.HandlerExecutor
 import com.reilandeubank.unprocess.CameraActivity
 import com.reilandeubank.unprocess.R
 import com.reilandeubank.unprocess.databinding.FragmentCameraBinding
+import com.reilandeubank.unprocess.utils.OrientationLiveData
+import com.reilandeubank.unprocess.utils.computeExifOrientation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -62,23 +68,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.TimeoutException
 import java.util.Date
 import java.util.Locale
-import kotlin.RuntimeException
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.TimeoutException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import android.Manifest
-import android.content.ContentValues
-import android.content.pm.PackageManager
-import android.os.Environment
-import android.provider.MediaStore
-import androidx.core.content.ContextCompat
-import java.io.OutputStream
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 
 class CameraFragment : Fragment() {
 
@@ -155,11 +151,6 @@ class CameraFragment : Fragment() {
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        fragmentCameraBinding.captureButton.setOnApplyWindowInsetsListener { v, insets ->
-            v.translationX = (-insets.systemWindowInsetRight).toFloat()
-            v.translationY = (-insets.systemWindowInsetBottom).toFloat()
-            insets.consumeSystemWindowInsets()
-        }
 
         fragmentCameraBinding.viewFinder.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
@@ -173,19 +164,12 @@ class CameraFragment : Fragment() {
 
             override fun surfaceCreated(holder: SurfaceHolder) {
                 // Selects appropriate preview size and configures view finder
-                val previewSize = getPreviewOutputSize(
-                    fragmentCameraBinding.viewFinder.display,
-                    characteristics,
-                    SurfaceHolder::class.java
-                )
-                Log.d(
-                    TAG,
-                    "View finder size: ${fragmentCameraBinding.viewFinder.width} x ${fragmentCameraBinding.viewFinder.height}"
-                )
-                Log.d(TAG, "Selected preview size: $previewSize")
+                val sensorSize =
+                    characteristics.get(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
+                Log.d(TAG, "Sensor size: $sensorSize")
                 fragmentCameraBinding.viewFinder.setAspectRatio(
-                    previewSize.width,
-                    previewSize.height
+                    sensorSize!!.width,
+                    sensorSize.height
                 )
 
                 // To ensure that size is set, initialize camera in the view's thread
@@ -195,9 +179,9 @@ class CameraFragment : Fragment() {
 
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
-            observe(viewLifecycleOwner, Observer { orientation ->
+            observe(viewLifecycleOwner) { orientation ->
                 Log.d(TAG, "Orientation changed: $orientation")
-            })
+            }
         }
     }
 
@@ -313,18 +297,44 @@ class CameraFragment : Fragment() {
         handler: Handler? = null
     ): CameraCaptureSession = suspendCoroutine { cont ->
 
-        // Create a capture session using the predefined targets; this also involves defining the
-        // session state callback to be notified of when the session is ready
-        device.createCaptureSession(targets, object : CameraCaptureSession.StateCallback() {
+        // Create a capture session by new method createCaptureSession(sessionConfiguration: SessionConfiguration)
+        // as old method is deprecated in api level 30
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val sessionConfiguration = handler?.looper?.let { HandlerExecutor(it) }?.let {
 
-            override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
+                SessionConfiguration(
+                    SessionConfiguration.SESSION_REGULAR,
+                    targets.map { target -> OutputConfiguration(target) },
+                    it,
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) =
+                            cont.resume(session)
 
-            override fun onConfigureFailed(session: CameraCaptureSession) {
-                val exc = RuntimeException("Camera ${device.id} session configuration failed")
-                Log.e(TAG, exc.message, exc)
-                cont.resumeWithException(exc)
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                            val exc =
+                                RuntimeException("Camera ${device.id} session configuration failed")
+                            Log.e(TAG, exc.message, exc)
+                            cont.resumeWithException(exc)
+                        }
+                    }
+                )
             }
-        }, handler)
+            device.createCaptureSession(sessionConfiguration)
+        } else {
+
+            // Create a capture session using the predefined targets; this also involves defining the
+            // session state callback to be notified of when the session is ready
+            device.createCaptureSession(targets, object : CameraCaptureSession.StateCallback() {
+
+                override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
+
+                override fun onConfigureFailed(session: CameraCaptureSession) {
+                    val exc = RuntimeException("Camera ${device.id} session configuration failed")
+                    Log.e(TAG, exc.message, exc)
+                    cont.resumeWithException(exc)
+                }
+            }, handler)
+        }
     }
 
     /**
@@ -477,7 +487,10 @@ class CameraFragment : Fragment() {
                             // Add EXIF orientation data using the URI
                             resolver.openFileDescriptor(uri, "rw")?.use { pfd ->
                                 ExifInterface(pfd.fileDescriptor).apply {
-                                    setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
+                                    setAttribute(
+                                        ExifInterface.TAG_ORIENTATION,
+                                        result.orientation.toString()
+                                    )
                                     saveAttributes()
                                 }
                             }
@@ -504,7 +517,10 @@ class CameraFragment : Fragment() {
 
                             // Add EXIF orientation data
                             ExifInterface(file.absolutePath).apply {
-                                setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
+                                setAttribute(
+                                    ExifInterface.TAG_ORIENTATION,
+                                    result.orientation.toString()
+                                )
                                 saveAttributes()
                             }
 

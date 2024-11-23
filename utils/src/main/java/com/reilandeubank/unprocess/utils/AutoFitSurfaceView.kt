@@ -18,7 +18,6 @@ package com.reilandeubank.unprocess.utils
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.SurfaceView
 import kotlin.math.roundToInt
 
@@ -60,7 +59,7 @@ class AutoFitSurfaceView @JvmOverloads constructor(
             val newWidth: Int
             val newHeight: Int
             val actualRatio = if (width > height) aspectRatio else 1f / aspectRatio
-            if (width < height * actualRatio) {
+            if (width > height * actualRatio) {
                 newHeight = height
                 newWidth = (height * actualRatio).roundToInt()
             } else {
@@ -68,7 +67,6 @@ class AutoFitSurfaceView @JvmOverloads constructor(
                 newHeight = (width / actualRatio).roundToInt()
             }
 
-            Log.d(TAG, "Measured dimensions set: $newWidth x $newHeight")
             setMeasuredDimension(newWidth, newHeight)
         }
     }

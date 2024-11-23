@@ -73,7 +73,7 @@ class ImageViewerFragment : Fragment() {
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
-    ): View? = ViewPager2(requireContext()).apply {
+    ): View = ViewPager2(requireContext()).apply {
         // Populate the ViewPager and implement a cache of two media items
         offscreenPageLimit = 2
         adapter = GenericListAdapter(
@@ -127,8 +127,9 @@ class ImageViewerFragment : Fragment() {
 
     /** Utility function used to add an item to the viewpager and notify it, in the main thread */
     private fun addItemToViewPager(view: ViewPager2, item: Bitmap) = view.post {
-        bitmapList.add(item)
-        view.adapter!!.notifyDataSetChanged()
+        val position = bitmapList.size // Get the position where the new item will be added
+        bitmapList.add(item) // Add the new item to the list
+        view.adapter?.notifyItemInserted(position) // Notify that an item was inserted
     }
 
     /** Utility function used to decode a [Bitmap] from a byte array */

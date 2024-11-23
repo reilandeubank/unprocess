@@ -16,4 +16,5 @@
 <resources>
     <string name="app_name">unprocess</string>
     <string name="capture">Capture</string>
+    <string name="permission_denied">Permission request denied</string>
 </resources>

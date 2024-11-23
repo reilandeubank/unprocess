@@ -18,10 +18,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: "androidx.navigation.safeargs"
+apply plugin: 'com.google.devtools.ksp'
 
 android {
     namespace = "com.reilandeubank.unprocess"
-    compileSdkVersion 34
+    compileSdk 35
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         applicationId "com.reilandeubank.unprocess"
@@ -61,18 +62,20 @@ dependencies {
     implementation project(':utils')
 
     // Kotlin lang
-    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.core:core-ktx:1.15.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+    implementation "androidx.activity:activity-ktx:1.9.3"
 
     // App compat and UI things
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
-    implementation "androidx.viewpager2:viewpager2:1.0.0"
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'com.google.android.gms:play-services-basement:18.5.0'
 
     // Navigation library
-    def nav_version = '2.7.6'
+    def nav_version = '2.8.4'
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
 
@@ -81,18 +84,18 @@ dependencies {
 
     // Glide
     implementation 'com.github.bumptech.glide:glide:4.16.0'
-    kapt 'com.github.bumptech.glide:compiler:4.16.0'
+    ksp 'com.github.bumptech.glide:ksp:4.16.0'
 
     // Unit testing
-    testImplementation 'androidx.test.ext:junit:1.1.5'
-    testImplementation 'androidx.test:rules:1.5.0'
-    testImplementation 'androidx.test:runner:1.5.2'
-    testImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    testImplementation 'org.robolectric:robolectric:4.11.1'
+    testImplementation 'androidx.test.ext:junit:1.2.1'
+    testImplementation 'androidx.test:rules:1.6.1'
+    testImplementation 'androidx.test:runner:1.6.2'
+    testImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    testImplementation 'org.robolectric:robolectric:4.14.1'
 
     // Instrumented testing
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test:rules:1.5.0'
-    androidTestImplementation 'androidx.test:runner:1.5.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:rules:1.6.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }
